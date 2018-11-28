@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="board">
+	
+	<delete id="delete">
+		delete from board
+		where num = #{num}
+	</delete>
+	
+	<select id="checkRefnum" parameterType="int" resultType="int">
+		select count(refnum) cnt from board
+		where refnum = #{num}
+	</select>
+	
+	<insert id="insertReply" parameterType="BoardDTO">
+		INSERT INTO board (num, name, passwd,                         
+		subject, content, regdate, ref, indent, ansnum,                
+		ip, filename, filesize, refnum )                              
+		VALUES((select nvl(max(num),0) + 1 from board),#{name},#{passwd},#{subject},#{content},sysdate,#{ref}, 
+		#{indent}+1,#{ansnum}+1,#{ip},#{filename, jdbcType=VARCHAR},#{filesize, jdbcType=INTEGER},#{refnum})                                                  
+	</insert>
+	
+	<update id="upAnsnum" parameterType="Map">
+		update board        
+		set ansnum = ansnum + 1 
+		where ref = #{ref}    
+		and ansnum > #{ansnum}      
+	</update>
+	
+	<select id="readReply" parameterType="int" resultType="BoardDTO">
+		SELECT num, ref, indent, ansnum, subject from board 
+		WHERE num = #{num}                                
+	</select>
+	
+	<update id="update" parameterType="BoardDTO">
+		update board set             
+		name = #{name},   
+		subject = #{subject},
+		content = #{content}
+		<if test="filesize>0">  
+		, filename = #{filename},
+		filesize = #{filesize}
+		</if> 
+		where num = #{num}   
+	
+	</update>
+
+	<select id="passwdCheck" parameterType="Map" resultType="int">
+		select count(*) cnt from board 
+		where num = #{num}              
+		and passwd = #{passwd}             
+	</select>
+
+
+	<update id="upCount" parameterType="int">
+		update board      
+		set count = count + 1 
+		where num = #{num}  
+	</update>
+
+	<insert id="create" parameterType="BoardDTO">
+		insert into board(num, name, subject, content, regdate,    
+		passwd, ip, filename, filesize, ref)           
+		values((select nvl(max(num),0) + 1 from board), #{name}, #{subject}, #{content},  
+		sysdate, #{passwd}, #{ip}, #{filename, jdbcType=VARCHAR}, #{filesize, jdbcType=INTEGER}, (select nvl(max(ref),0) + 1 from board))
+<!--         #{} 하나의 필드로 인식                                                         -->
+	</insert>
+
+	<select id="total" parameterType="Map" resultType="int">
+		select count(*) cnt from board
+		<where>
+			<choose>
+				<when test="col=='name'">
+					name like '%'||#{word}||'%'
+				</when>
+				<when test="col=='subject'">
+					subject like '%'||#{word}||'%'
+				</when>
+				<when test="col=='content'">
+					content like '%'||#{word}||'%'
+				</when>
+				<otherwise>
+					subject like '%'||#{word}||'%'
+					or
+					content like '%'||#{word}||'%'
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+	
+	<select id="list" resultType="BoardDTO" parameterType="Map">
+		select num, name, subject, regdate, count, indent, r
+		from(
+			select num, name, subject, regdate, count, indent, rownum r
+			from(
+				select num, name, subject, count, indent,
+				to_char(regdate, 'yyyy-mm-dd') regdate
+				from board
+				<where>
+					<choose>
+						<when test="col=='name'">
+							name like '%'||#{word}||'%'
+						</when>
+						<when test="col=='subject'">
+							subject like '%'||#{word}||'%'
+						</when>
+						<when test="col=='content'">
+							content like '%'||#{word}||'%'
+						</when>
+						<otherwise>
+							subject like '%'||#{word}||'%'
+							or
+							content like '%'||#{word}||'%'
+						</otherwise>
+					</choose>
+				</where>
+		ORDER BY ref DESC, ansnum ASC
+
+				)	
+			)                                                                            
+   <![CDATA[                                                                        
+   where r>=#{sno} and r<=#{eno}  
+   ]]>
+	</select>
+
+	<select id="read" resultType="BoardDTO" parameterType="int">
+		select num, name, subject, content, count,
+				to_char(regdate, 'yyyy-mm-dd') regdate,
+ 				ip, filename, filesize     
+		from board                              
+		where num = #{num}                           
+	</select>
+
+</mapper>
