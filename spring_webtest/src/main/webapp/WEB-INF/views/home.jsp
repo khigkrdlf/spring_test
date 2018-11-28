@@ -2,13 +2,13 @@
 <%@ page contentType="text/html; charset=utf-8" %>
 
 
-<c:set var="title" value="나의 여행 블로그"/>
+<c:set var="title" value="나의 webtest"/>
 <c:if test="${not empty sessionScope.id && sessionScope.grade=='A' }">
 <c:set var="title" value="관리자 페이지"/>
 </c:if>
 <c:choose>
 	<c:when test="${empty sessionScope.id }">
-		<c:set var="str" value="메인페이지 입니다."></c:set>
+		<c:set var="str" value="기본페이지 입니다."></c:set>
 	</c:when>
 	<c:otherwise>
 		<c:set var="str" value="안녕하세요 ${sessionScope.id} 님 "></c:set>
